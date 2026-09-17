@@ -129,7 +129,7 @@ class Cluster:
             sdkconfig_option=sdkconfig_option,
             chip_fqn=chip_fqn,
             chip_include=chip_include,
-            espm_namespace=espm_namespace,
+            espm_namespace="switch_cluster" if name == "Switch" else espm_namespace,
         )
 
     def get_attribute(self, name: str) -> Attribute:

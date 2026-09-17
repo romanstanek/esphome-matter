@@ -135,7 +135,6 @@ The following device types are untested. Many of them can still successfully be 
 
 - door_lock
 - aggregator
-- generic_switch
 - power_source
 - ota_requestor
 - bridged_node
@@ -189,3 +188,57 @@ The following device types are untested. Many of them can still successfully be 
 - electrical_energy_tariff
 - electrical_meter
 - control_bridge
+
+# generic_switch (single button)
+
+Map a debounced ESPHome binary sensor to a Matter momentary button:
+
+```yaml
+matter:
+  endpoints:
+    2:
+      generic_switch:
+        binary_sensor: test_button
+```
+
+The mapping enables MomentarySwitch, MomentarySwitchRelease,
+MomentarySwitchLongPress, and MomentarySwitchMultiPress (maximum 2).
+The binary sensor must report true for pressed; configure inversion and debounce
+on that sensor. The current position is 1 when pressed and 0 when released.
+Initial state synchronization does not emit an event. A button held during
+startup must be released before a complete click can be reported.
+
+- Single click: InitialPress, ShortRelease, then MultiPressComplete(1) after
+  350 ms without another press.
+- Double click: a second press within that window emits MultiPressOngoing(2),
+  then MultiPressComplete(2) 350 ms after the second release.
+- Long press: holding the first press for 800 ms emits LongPress once, followed
+  by LongRelease on release. It does not emit a single-click completion.
+- A hold on a later press belongs to the multi-press sequence and does not
+  generate long-press events. More than two presses reports completion count 0
+  (overflow), rather than a false double click.
+
+Controllers should use MultiPressComplete to distinguish single and double
+clicks, rather than triggering single-click actions on InitialPress or
+ShortRelease. Controller behavior must be verified after the feature-map update.
+Action-switch and latching features are rejected. Timers run on ESPHome's main
+loop and event updates run on the Matter thread.
+
+The Waveshare P4 Ethernet example retains temperature endpoint 1 and adds button
+endpoint 2. With power disconnected, connect a normally-open dry-contact button
+between the header pins labelled GPIO2 and GND. Do not connect the button to a
+power rail. A four-leg tactile switch has internally joined pairs: choose one
+terminal from each pair (verify with a continuity meter if uncertain).
+GPIO2 is shown in the [official board pinout](https://docs.waveshare.com/assets/images/ESP32-P4-Module-DEV-KIT-details-intro-0c4dab98d7d37956d9339e02b96f6011.webp).
+The example uses an internal pull-up and 30 ms debounce on both edges.
+
+After flashing, check for `InitialPress` and `ShortRelease` under `matter.switch`
+in the serial log, then verify an event for each click in the Matter controller.
+Repeated clicks must remain distinct even when the final position is unchanged.
+
+On 2026-09-16, this configuration compiled and ran on the Waveshare ESP32-P4
+revision 1.0 board. Serial logs confirmed repeated InitialPress/ShortRelease
+pairs on endpoint 2 and retained both existing Matter fabrics. The user verified
+that single press switched lights through Apple Home and subsequently confirmed
+double press and long press work there too. All three gestures have therefore
+been user-verified in Apple Home. Home Assistant has not yet been tested.

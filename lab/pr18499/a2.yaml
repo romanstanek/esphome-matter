@@ -1,0 +1,100 @@
+# PR 18499 pinned to 62db95c7bb5f35790da4169a3d9f0add17e130e1.
+# Use the isolated PR ESPHome installation. Virtual dimmer drives no hardware.
+esphome:
+  min_version: 2026.8.2
+  name: kincony-a2-pr18499
+  friendly_name: KinCony A2 PR18499
+esp32:
+  toolchain: esp-idf
+  variant: ESP32
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+logger: null
+api:
+  reboot_timeout: 0s
+network:
+  enable_ipv6: true
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    mode: CLK_OUT
+    pin: GPIO17
+  phy_addr: 0
+matter:
+  vendor_id: 65521
+  product_id: 32768
+  setup_code: '20202021'
+  discriminator: 3840
+  vendor_name: ESPHome
+  product_name: A2 PR18499 Test
+  node_label: A2 PR18499
+  topology: bridge
+output:
+- platform: gpio
+  id: relay_output_1
+  pin: GPIO15
+- platform: gpio
+  id: relay_output_2
+  pin: GPIO2
+- platform: template
+  id: virtual_dimmer_output
+  type: float
+  write_action:
+  - logger.log:
+      format: 'Virtual dimmer level: %.3f'
+      args:
+      - state
+light:
+- platform: binary
+  id: relay_1
+  name: Relay 1
+  output: relay_output_1
+  restore_mode: ALWAYS_OFF
+- platform: binary
+  id: relay_2
+  name: Relay 2
+  output: relay_output_2
+  restore_mode: ALWAYS_OFF
+- platform: monochromatic
+  id: virtual_dimmer
+  name: Virtual Dimmer Test
+  output: virtual_dimmer_output
+  restore_mode: ALWAYS_OFF
+  default_transition_length: 0s
+binary_sensor:
+- platform: gpio
+  id: input_1
+  name: Input 1
+  internal: true
+  pin:
+    number: GPIO36
+    inverted: true
+    mode: INPUT
+  filters:
+  - delayed_on: 30ms
+  - delayed_off: 30ms
+  on_press:
+  - button.press: input_button_1
+- platform: gpio
+  id: input_2
+  name: Input 2
+  internal: true
+  pin:
+    number: GPIO39
+    inverted: true
+    mode: INPUT
+  filters:
+  - delayed_on: 30ms
+  - delayed_off: 30ms
+  on_press:
+  - button.press: input_button_2
+button:
+- platform: template
+  id: input_button_1
+  name: Input 1 Button
+- platform: template
+  id: input_button_2
+  name: Input 2 Button

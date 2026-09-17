@@ -99,12 +99,18 @@ class Endpoint:
             light_ = await cg.get_variable(device_config[CONF_LIGHT_ID])
             cg.add(self._var.map_light_to_endpoint(light_, self._endpoint_id))
 
+        if device_type.name == "generic_switch" and "binary_sensor" in device_config:
+            source = await cg.get_variable(device_config["binary_sensor"])
+            cg.add_define("USE_MATTER_SWITCH")
+            cg.add(self._var.map_switch_to_endpoint(source, self._endpoint_id))
+
         # Register extra features
         for enabled_feature in device_config.get(CONF_FEATURES, ()):
-            print(enabled_feature)
             for cluster in device_type.server_clusters:
-                cluster_config = self._cluster_configs[cluster.name]
                 if enabled_feature in (f.name for f in cluster.features):
+                    # Touching the defaultdict schedules cluster creation. Only
+                    # create optional clusters that actually own this feature.
+                    cluster_config = self._cluster_configs[cluster.name]
                     cluster_config.enabled_features[enabled_feature] = True
 
         # Send device type registration to codegen
@@ -138,7 +144,7 @@ class Endpoint:
                 if not enabled:
                     continue
                 feature = features_by_name[feature_name]
-                if cluster.is_choice_feature(feature):
+                if cluster.is_choice_feature(feature) or cluster.name == "Switch":
                     feature_flags.append(
                         f"esp_matter::cluster::{cluster.espm_namespace}::feature::{feature.namespace}::get_id()"
                     )

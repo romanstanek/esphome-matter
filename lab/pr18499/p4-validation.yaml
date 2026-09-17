@@ -1,0 +1,51 @@
+esphome:
+  min_version: 2026.8.2
+  name: p4-pr18499
+esp32:
+  toolchain: platformio
+  variant: ESP32P4
+  engineering_sample: true
+  flash_size: 16MB
+  cpu_frequency: 360MHz
+  framework:
+    type: esp-idf
+logger: null
+api:
+  reboot_timeout: 0s
+network:
+  enable_ipv6: true
+ethernet:
+  type: IP101
+  mdc_pin: GPIO31
+  mdio_pin: GPIO52
+  power_pin: GPIO51
+  clk:
+    mode: CLK_EXT_IN
+    pin: GPIO50
+  phy_addr: 1
+matter:
+  vendor_id: 65521
+  product_id: 32768
+  setup_code: '20202021'
+  discriminator: 3840
+  vendor_name: ESPHome
+  product_name: A2 PR18499 Test
+  node_label: A2 PR18499
+  topology: bridge
+sensor:
+- platform: internal_temperature
+  id: internal_temp
+binary_sensor:
+- platform: gpio
+  id: test_button
+  name: Test Button
+  internal: true
+  pin:
+    number: GPIO2
+    mode:
+      input: true
+      pullup: true
+    inverted: true
+  filters:
+  - delayed_on: 30ms
+  - delayed_off: 30ms

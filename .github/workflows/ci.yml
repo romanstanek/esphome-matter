@@ -138,6 +138,8 @@ jobs:
           .venv/bin/esphome config tests/configs/esp32-all-endpoints.yaml
       - name: Check Ethernet failure handling and SDK adaptation
         run: .venv/bin/python tests/test_ethernet_regressions.py
+      - name: Check Matter button events
+        run: .venv/bin/python tests/test_switch.py
 
   ethernet:
     name: Ethernet (${{ matrix.config }})

@@ -85,6 +85,7 @@ public:
   }
 #endif // USE_SENSOR
 #ifdef USE_BINARY_SENSOR
+  void map_switch_to_endpoint(binary_sensor::BinarySensor *sensor, uint16_t endpoint_id);
   void
   register_binary_sensor_attribute(binary_sensor::BinarySensor *sensor,
                                    uint16_t endpoint_id, uint32_t cluster_id,

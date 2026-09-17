@@ -6,6 +6,7 @@ from pathlib import Path
 import esphome.config_validation as cv
 from esphome import automation
 from esphome.components import light
+from esphome.components.binary_sensor import BinarySensor
 from esphome.const import CONF_LIGHT_ID
 
 from ..const import CONF_FEATURES
@@ -125,6 +126,12 @@ class DeviceType:
     #     return features
 
     def _validate_features(self, config: dict) -> dict:
+        if self.name == "generic_switch" and "binary_sensor" in config:
+            supported = ["MomentarySwitch", "MomentarySwitchRelease",
+                         "MomentarySwitchLongPress", "MomentarySwitchMultiPress"]
+            if any(f not in supported for f in config.get(CONF_FEATURES, ())):
+                raise cv.Invalid("A binary_sensor generic_switch supports only momentary button features")
+            config[CONF_FEATURES] = supported
         # enabled_features = list(config.get(CONF_FEATURES, ()))
         # for feature in sorted(self.implicit_features(config)):
         #     if feature not in enabled_features:
@@ -171,6 +178,9 @@ class DeviceType:
             schema[cv.Optional(CONF_FEATURES)] = cv.ensure_list(
                 cv.one_of(*(feature.name for feature in features))
             )
+
+        if self.name == "generic_switch":
+            schema[cv.Optional("binary_sensor")] = cv.use_id(BinarySensor)
 
         # TODO: replace with something better
         if self.name.endswith("light"):

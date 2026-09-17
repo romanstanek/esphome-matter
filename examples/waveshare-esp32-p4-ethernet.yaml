@@ -38,7 +38,26 @@ matter:
     1:
       temperature_sensor:
         temperature: internal_temp
+    2:
+      generic_switch:
+        binary_sensor: test_button
 
 sensor:
   - platform: internal_temperature
     id: internal_temp
+
+# Momentary dry-contact button between GPIO2 and GND.
+binary_sensor:
+  - platform: gpio
+    id: test_button
+    name: Test Button
+    internal: true
+    pin:
+      number: GPIO2
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms

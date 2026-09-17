@@ -1,0 +1,95 @@
+# KC868-A2 revision 2.5 (classic ESP32), not A2v3 (ESP32-S3).
+# Pinout: https://www.kincony.com/forum/showthread.php?tid=2691&page=2
+esphome:
+  min_version: 2026.8.2
+  name: kincony-a2-matter
+  friendly_name: KinCony A2 Matter
+
+esp32:
+  toolchain: platformio
+  variant: ESP32
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+external_components:
+  - source: ../components
+
+logger:
+
+api:
+  reboot_timeout: 0s
+
+network:
+  enable_ipv6: true
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    mode: CLK_OUT
+    pin: GPIO17
+  phy_addr: 0
+
+# Relays are represented as on/off lights using the existing Matter light mapping.
+# Inputs remain independent of the relays; assign their actions in the controller.
+matter:
+  endpoints:
+    1:
+      on_off_light:
+        light_id: relay_1
+    2:
+      on_off_light:
+        light_id: relay_2
+    3:
+      generic_switch:
+        binary_sensor: input_1
+    4:
+      generic_switch:
+        binary_sensor: input_2
+
+output:
+  - platform: gpio
+    id: relay_output_1
+    pin: GPIO15
+  - platform: gpio
+    id: relay_output_2
+    pin: GPIO2
+
+light:
+  - platform: binary
+    id: relay_1
+    name: Relay 1
+    output: relay_output_1
+    restore_mode: ALWAYS_OFF
+  - platform: binary
+    id: relay_2
+    name: Relay 2
+    output: relay_output_2
+    restore_mode: ALWAYS_OFF
+
+# DI1/DI2 have board input circuitry. GPIO36/39 have no internal pull-ups.
+binary_sensor:
+  - platform: gpio
+    id: input_1
+    name: Input 1
+    internal: true
+    pin:
+      number: GPIO36
+      inverted: true
+      mode: INPUT
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms
+  - platform: gpio
+    id: input_2
+    name: Input 2
+    internal: true
+    pin:
+      number: GPIO39
+      inverted: true
+      mode: INPUT
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms
